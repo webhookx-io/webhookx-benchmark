@@ -1,0 +1,105 @@
+sources:
+  - name: async-source
+    async: true
+    type: http
+    config:
+      http:
+        path: /
+        methods: [ "POST" ]
+        response:
+          code: 200
+          content_type: application/json
+          body: '{"message": "OK"}'
+
+  - name: sync-source
+    type: http
+    config:
+      http:
+        path: /sync
+        methods: [ "POST" ]
+        response:
+          code: 200
+          content_type: application/json
+          body: '{"message": "OK"}'
+
+  - name: function-source
+    async: true
+    type: http
+    config:
+      http:
+        path: /function1
+        methods: [ "POST" ]
+        response:
+          code: 200
+          content_type: application/json
+          body: '{"message": "OK"}'
+    plugins:
+      - name: function
+        config:
+          function: function handle() {}
+
+  - name: function2-source
+    async: true
+    type: http
+    config:
+      http:
+        path: /function2
+        methods: [ "POST" ]
+        response:
+          code: 200
+          content_type: application/json
+          body: '{"message": "OK"}'
+    plugins:
+      - name: function
+        config:
+          function: |
+            function handle() {
+              var body = webhookx.request.getBody()
+              var obj = JSON.parse(body)
+              obj.data.foo = 'bar'
+              webhookx.setEvent(JSON.stringify(obj))
+            }
+
+endpoints:
+  - name: default-endpoint
+    request:
+      timeout: 10000
+      url: http://upstream:9999/
+      method: POST
+    retry:
+      strategy: fixed
+      config:
+        attempts: [0, 3600, 3600]
+    events: [ "sanity" ]
+
+  - name: delay-100ms-endpoint
+    request:
+      timeout: 10000
+      url: http://upstream:9999/delay/100
+      method: POST
+    events: [ "delay-100ms" ]
+
+  - name: delay-1000ms-endpoint
+    request:
+      timeout: 10000
+      url: http://upstream:9999/delay/1000
+      method: POST
+    events: [ "delay-1000ms" ]
+
+  - name: http-500-endpoint
+    request:
+      timeout: 10000
+      url: http://upstream:9999/status/500
+      method: POST
+    retry:
+      strategy: fixed
+      config:
+        attempts: [0, 0, 0]
+    events: [ "http-500" ]
+
+  - name: e2e-latency-endpoint
+    request:
+      timeout: 10000
+      url: http://upstream:9999/latency_state
+      method: POST
+    events: [ "e2e-latency" ]

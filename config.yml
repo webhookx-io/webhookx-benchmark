@@ -1,0 +1,16 @@
+access_log:
+  enabled: false
+
+database:
+  max_pool_size: 80
+
+status:
+  listen: 0.0.0.0:9602
+
+worker:
+  deliverer:
+    acl:
+      deny: [ ]
+  pool:
+    size: 100000
+    concurrency: 1600

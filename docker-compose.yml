@@ -1,0 +1,64 @@
+services:
+  webhookx-migration:
+    image: "webhookx/webhookx:${WEBHOOKX_VERSION:-latest}"
+    environment:
+      WEBHOOKX_DATABASE_HOST: postgres
+      WEBHOOKX_DATABASE_MAX_POOL_SIZE: 10
+    command: "webhookx db up"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  webhookx:
+    image: "webhookx/webhookx:${WEBHOOKX_VERSION:-latest}"
+    container_name: webhookx
+    environment:
+      WEBHOOKX_DATABASE_HOST: postgres
+      WEBHOOKX_ADMIN_LISTEN: 0.0.0.0:9601
+      WEBHOOKX_PROXY_QUEUE_REDIS_HOST: redis
+      WEBHOOKX_REDIS_HOST: redis
+      WEBHOOKX_ANONYMOUS_REPORTS: false
+    volumes:
+      - ./config/:/config/:ro
+      - ./config.yml:/config.yml:ro
+    ports:
+      - "9601:9601"
+      - "9600:9600"
+      - "9602:9602"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      webhookx-migration:
+        condition: service_started
+    command: "webhookx start --config config.yml"
+
+  redis:
+    image: redis:6.2
+    command: "--appendonly yes --appendfsync everysec"
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: webhookx
+      POSTGRES_USER: webhookx
+      POSTGRES_HOST_AUTH_METHOD: trust
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      interval: 1s
+      timeout: 3s
+      retries: 3
+
+  upstream:
+    image: openresty/openresty:alpine
+    ports:
+      - "9999:9999"
+    volumes:
+      - ./services/upstream/nginx/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ./services/upstream/nginx/latency.lua:/usr/local/openresty/nginx/conf/latency.lua:ro
+
+  k6:
+    image: grafana/k6
+    volumes:
+      - ./scripts/:/scripts/:ro
