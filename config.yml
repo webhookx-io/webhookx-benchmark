@@ -13,4 +13,3 @@ worker:
       deny: [ ]
   pool:
     size: 100000
-    concurrency: 1600

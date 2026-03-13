@@ -29,11 +29,11 @@ bench-ingest-event-sync: restart
 
 bench-egest: restart
 	@echo "--- Running Egest Benchmark ---"
-	@docker compose run -q --rm k6 run -e URL=http://webhookx:9600 /scripts/egest.js
+	@docker compose run -q --rm k6 run -e URL=http://webhookx:9600 $(ARGS) /scripts/egest.js
 
 bench-egest-slow-endpoint: restart
 	@echo "--- Running Egest (with 100ms delay endpoint) Benchmark ---"
-	@docker compose run -q --rm k6 run -e URL=http://webhookx:9600 /scripts/egest-slow-endpoint.js
+	@docker compose run -q --rm k6 run -e URL=http://webhookx:9600 $(ARGS) /scripts/egest-slow-endpoint.js
 
 bench-egest-fail: restart
 	@echo "--- Running Failing Upstream (Retry) Benchmark ---"
