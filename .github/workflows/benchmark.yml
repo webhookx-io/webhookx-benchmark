@@ -2,10 +2,40 @@ name: Benchmark
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'WebhookX version (e.g. latest, v1.0.1)'
+        required: false
+        default: 'latest'
+      ref:
+        description: 'WebhookX git ref (branch, tag or commit) to build from'
+        required: false
 
 jobs:
   benchmark:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: make bench-all ARGS="--quiet"
+
+      - name: Checkout webhookx
+        if: ${{ github.event.inputs.ref != '' }}
+        uses: actions/checkout@v4
+        with:
+          repository: webhookx-io/webhookx
+          ref: ${{ github.event.inputs.ref }}
+          path: webhookx
+
+      - name: Build image
+        if: ${{ github.event.inputs.ref != '' }}
+        run: |
+          cd webhookx
+          docker build -t webhookx/webhookx:local .
+          echo "WEBHOOKX_VERSION=local" >> $GITHUB_ENV
+
+      - name: Set WEBHOOKX_VERSION
+        if: ${{ github.event.inputs.ref == '' }}
+        run: |
+          echo "WEBHOOKX_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+
+      - name: Run benchmark
+        run: make bench-all ARGS="--quiet"
