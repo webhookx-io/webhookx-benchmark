@@ -57,4 +57,4 @@ bench-e2e-10000: restart
 	@curl http://localhost:9999/latency_state
 
 wait-for-ready:
-	@docker run --rm --network webhookx-benchmark_default jwilder/dockerize -wait tcp://webhookx:9600 -timeout 10s
+	@docker compose run --rm dockerize -wait tcp://webhookx:9600 -timeout 10s

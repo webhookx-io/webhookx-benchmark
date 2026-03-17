@@ -62,3 +62,6 @@ services:
     image: grafana/k6
     volumes:
       - ./scripts/:/scripts/:ro
+
+  dockerize:
+    image: jwilder/dockerize
