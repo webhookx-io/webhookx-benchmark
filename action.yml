@@ -8,7 +8,8 @@ inputs:
 runs:
   using: composite
   steps:
-    - env:
-        WEBHOOKX_VERSION: ${{ inputs.version }}
-      shell: bash
+    - shell: bash
       run: make bench-all ARGS="--quiet"
+      working-directory: ${{ github.action_path }}
+      env:
+        WEBHOOKX_VERSION: ${{ inputs.version }}
