@@ -8,4 +8,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: WEBHOOKX_VERSION=${{ inputs.version }} make bench-all ARGS="--quiet"
+    - env:
+        WEBHOOKX_VERSION: ${{ inputs.version }}
+      shell: bash
+      run: make bench-all ARGS="--quiet"
