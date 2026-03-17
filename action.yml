@@ -1,0 +1,11 @@
+name: Benchmark
+
+inputs:
+  version:
+    description: ''
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - run: WEBHOOKX_VERSION=${{ inputs.version }} make bench-all ARGS="--quiet"
