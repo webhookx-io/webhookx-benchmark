@@ -37,6 +37,8 @@ services:
   redis:
     image: redis:6.2
     command: "--appendonly yes --appendfsync everysec"
+    volumes:
+      - "redis_data:/data"
 
   postgres:
     image: postgres:13
@@ -49,6 +51,8 @@ services:
       interval: 1s
       timeout: 3s
       retries: 3
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data/"
 
   upstream:
     image: openresty/openresty:alpine
@@ -65,3 +69,7 @@ services:
 
   dockerize:
     image: jwilder/dockerize
+
+volumes:
+  postgres_data:
+  redis_data:

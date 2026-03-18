@@ -1,10 +1,20 @@
-.PHONY: docker-up docker-down webhookx-setup restart bench-all
+.PHONY: \
+  bench-upstream \
+  bench-ingest-event \
+  bench-ingest-event-sync \
+  bench-egest \
+  bench-egest-slow-endpoint \
+  bench-egest-fail \
+  bench-e2e \
+  bench-e2e-1000 \
+  bench-e2e-5000 \
+  bench-e2e-10000
 
 docker-up:
-	@docker compose up -d
+	@docker compose up -d > /dev/null 2>&1
 
 docker-down:
-	@docker compose down -v
+	@docker compose down -v > /dev/null 2>&1
 
 webhookx-setup:
 	@docker exec webhookx webhookx admin sync config/webhookx.yml
@@ -13,7 +23,17 @@ restart: docker-down docker-up wait-for-ready webhookx-setup
 	@sleep 1
 	@echo "Environment started"
 
-bench-all: bench-upstream bench-ingest-event bench-ingest-event-sync bench-egest bench-egest-slow-endpoint bench-egest-fail bench-e2e
+bench-all:
+	@$(MAKE) bench-upstream
+	@$(MAKE) bench-ingest-event
+	@$(MAKE) bench-ingest-event-sync
+	@$(MAKE) bench-egest
+	@$(MAKE) bench-egest-slow-endpoint
+	@$(MAKE) bench-egest-fail
+	@$(MAKE) bench-e2e
+	@$(MAKE) bench-e2e-1000
+	@$(MAKE) bench-e2e-5000
+	@$(MAKE) bench-e2e-10000
 
 bench-upstream: restart
 	@echo "--- Running Upstream Benchmark ---"
@@ -38,8 +58,6 @@ bench-egest-slow-endpoint: restart
 bench-egest-fail: restart
 	@echo "--- Running Failing Upstream (Retry) Benchmark ---"
 	@docker compose run -q --rm k6 run -e URL=http://webhookx:9600 $(ARGS) /scripts/egest-fail.js
-
-bench-e2e: bench-e2e-1000 bench-e2e-5000 bench-e2e-10000
 
 bench-e2e-1000: restart
 	@echo "--- Running E2E Latency 1000 RPS Benchmark ---"
